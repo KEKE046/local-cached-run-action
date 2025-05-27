@@ -56,7 +56,8 @@ async function main() {
           core.info(`Cached result in ${cache_dir} and symlinked to ${path}`);
         }
       } catch (error) {
-        core.error(`Script failed: ${error.message}`);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        core.error(`Script failed: ${errorMessage}`);
         throw error;
       }
     }
@@ -69,9 +70,9 @@ async function main() {
     
     // Cleanup old cache directories (older than 7 days)
     cleanupOldCache();
-    
   } catch (error) {
-    core.setFailed(`Action failed: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    core.setFailed(`Action failed: ${errorMessage}`);
   }
 }
 
@@ -94,7 +95,8 @@ function cleanupOldCache() {
       }
     }
   } catch (error) {
-    core.warning(`Cache cleanup failed: ${error.message}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    core.warning(`Cache cleanup failed: ${errorMessage}`);
   }
 }
 
