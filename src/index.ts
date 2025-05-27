@@ -29,6 +29,11 @@ async function main() {
         fs.rmSync(path, { recursive: true, force: true });
       }
       
+      // Create parent directory for target path if it doesn't exist
+      const targetDir = path_module.dirname(path);
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
       // Create symlink from cache to target path
       fs.symlinkSync(path_module.resolve(cache_dir), path_module.resolve(path));
       core.info(`Symlinked cache ${cache_dir} to ${path}`);
