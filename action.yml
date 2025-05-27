@@ -1,0 +1,29 @@
+name: Run command with local cache
+description: |
+  This command run a script with a local cache
+  if the cache key is found, it will use the cached result
+  Otherwise, it will run the script and save the result to the cache
+  If the script fails, it will not save the result to the cache
+
+inputs:
+  prefix:
+    description: The prefix to use for the cache directory
+    required: true
+  key:
+    description: The cache key to use
+    required: true
+  path:
+    description: The path to the cache directory
+    required: true
+  run:
+    description: The command to run
+    required: true
+  cache_base_dir:
+    description: The base directory to use for the cache
+    required: false
+    default: '/cache'
+
+runs:
+  using: 'node20'
+  main: 'index.js'
+  
