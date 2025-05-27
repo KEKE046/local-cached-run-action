@@ -1,7 +1,7 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 1188:
+/***/ 5960:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -54,106 +54,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(7484));
 const fs_1 = __importDefault(__nccwpck_require__(9896));
-const path_1 = __importDefault(__nccwpck_require__(6928));
-const child_process_1 = __nccwpck_require__(5317);
-const cache_base_dir = core.getInput('cache_base_dir') || '/cache';
-const prefix = core.getInput('prefix', { required: true });
-const key = core.getInput('key', { required: true });
 const path = core.getInput('path', { required: true });
-const run = core.getInput('run', { required: true });
-const cache_dir = `${cache_base_dir}/${prefix}-${key}`;
-function main() {
+function postAction() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // Ensure cache base directory exists
-            if (!fs_1.default.existsSync(cache_base_dir)) {
-                fs_1.default.mkdirSync(cache_base_dir, { recursive: true });
-            }
-            // Check cache hit
-            const cacheExists = fs_1.default.existsSync(cache_dir);
-            if (cacheExists) {
-                core.info(`Cache hit for ${prefix}-${key}`);
-                // Remove target path if it exists
-                if (fs_1.default.existsSync(path)) {
-                    fs_1.default.rmSync(path, { recursive: true, force: true });
+            core.info('Running post action cleanup');
+            // Remove symlink if it exists and is actually a symlink
+            if (fs_1.default.existsSync(path)) {
+                const stats = fs_1.default.lstatSync(path);
+                if (stats.isSymbolicLink()) {
+                    core.info(`Removing symlink: ${path}`);
+                    fs_1.default.unlinkSync(path);
+                    // Create empty directory in place of the symlink
+                    core.info(`Creating empty directory: ${path}`);
+                    fs_1.default.mkdirSync(path, { recursive: true });
                 }
-                // Create parent directory for target path if it doesn't exist
-                const targetDir = path_1.default.dirname(path);
-                if (!fs_1.default.existsSync(targetDir)) {
-                    fs_1.default.mkdirSync(targetDir, { recursive: true });
+                else {
+                    core.info(`Path ${path} exists but is not a symlink, skipping cleanup`);
                 }
-                // Create symlink from cache to target path
-                fs_1.default.symlinkSync(path_1.default.resolve(cache_dir), path_1.default.resolve(path));
-                core.info(`Symlinked cache ${cache_dir} to ${path}`);
             }
             else {
-                core.info(`Cache miss for ${prefix}-${key}, running script`);
-                try {
-                    // Run the script
-                    (0, child_process_1.execSync)(run, {
-                        stdio: 'inherit',
-                        cwd: process.cwd(),
-                        shell: '/bin/bash'
-                    });
-                    core.info('Script executed successfully, caching result');
-                    // Move target path to cache directory
-                    if (fs_1.default.existsSync(path)) {
-                        if (fs_1.default.existsSync(cache_dir)) {
-                            fs_1.default.rmSync(cache_dir, { recursive: true, force: true });
-                        }
-                        (0, child_process_1.execSync)(`mv "${path}" "${cache_dir}"`, {
-                            stdio: 'inherit',
-                            cwd: process.cwd(),
-                            shell: '/bin/bash'
-                        });
-                        // Create symlink from cache to target path
-                        fs_1.default.symlinkSync(path_1.default.resolve(cache_dir), path_1.default.resolve(path));
-                        core.info(`Cached result in ${cache_dir} and symlinked to ${path}`);
-                    }
-                }
-                catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : String(error);
-                    core.error(`Script failed: ${errorMessage}`);
-                    throw error;
-                }
+                core.info(`Path ${path} does not exist, skipping cleanup`);
             }
-            // Touch current cache directory to prevent cleanup
-            if (fs_1.default.existsSync(cache_dir)) {
-                const now = new Date();
-                fs_1.default.utimesSync(cache_dir, now, now);
-            }
-            // Cleanup old cache directories (older than 7 days)
-            cleanupOldCache();
+            core.info('Post action cleanup completed successfully');
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            core.setFailed(`Action failed: ${errorMessage}`);
+            core.warning(`Post action cleanup failed: ${errorMessage}`);
         }
     });
 }
-function cleanupOldCache() {
-    try {
-        if (!fs_1.default.existsSync(cache_base_dir))
-            return;
-        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-        const entries = fs_1.default.readdirSync(cache_base_dir, { withFileTypes: true });
-        for (const entry of entries) {
-            if (entry.isDirectory() && entry.name.startsWith(prefix)) {
-                const dirPath = path_1.default.join(cache_base_dir, entry.name);
-                const stats = fs_1.default.statSync(dirPath);
-                if (stats.mtime.getTime() < sevenDaysAgo) {
-                    core.info(`Removing old cache directory: ${dirPath}`);
-                    fs_1.default.rmSync(dirPath, { recursive: true, force: true });
-                }
-            }
-        }
-    }
-    catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        core.warning(`Cache cleanup failed: ${errorMessage}`);
-    }
-}
-main();
+postAction();
 
 
 /***/ }),
@@ -27715,7 +27646,7 @@ module.exports = parseParams
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(1188);
+/******/ 	var __webpack_exports__ = __nccwpck_require__(5960);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

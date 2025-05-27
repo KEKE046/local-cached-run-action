@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {
-    "build": "tsc && ncc build"
+    "build": "tsc && ncc build lib/index.js -o dist-main && ncc build lib/post.js -o dist-post && mkdir -p dist && cp dist-main/index.js dist/index.js && cp dist-post/index.js dist/post.js && rm -rf dist-main dist-post"
   },
   "devDependencies": {
     "@types/node": "^22.15.21",

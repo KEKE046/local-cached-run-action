@@ -6,20 +6,32 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a GitHub Action that implements local caching for command execution. The action runs a script with a local cache mechanism - if the cache key is found, it uses the cached result; otherwise, it runs the script and saves the result to the cache. Failed scripts are not cached.
 
+## Development Commands
+
+- `npm run build` - Compiles TypeScript and bundles with ncc for distribution
+- `tsc` - Compile TypeScript to JavaScript (outputs to lib/)
+
 ## Architecture
 
-- `action.yml`: GitHub Action metadata defining inputs (prefix, key, path, run, cache_base_dir) and specifying Node.js 20 runtime
-- `index.js`: Main entry point that validates required inputs using @actions/core
-- `package.json`: Minimal Node.js package with @actions/core dependency
+- `src/index.ts`: Main TypeScript source implementing full cache logic with command execution
+- `src/post.ts`: Post action TypeScript source for cleanup operations
+- `dist/index.js`: Bundled main action distribution file
+- `dist/post.js`: Bundled post action distribution file
+- `lib/index.js` & `lib/post.js`: Compiled TypeScript outputs (intermediate build artifacts)
+- `action.yml`: GitHub Action metadata defining inputs, main action, and post action
 
-## Key Components
+## Cache Implementation Details
 
-- **Input Validation**: Uses @actions/core to validate required inputs (prefix, key, path, run) and optional cache_base_dir
-- **Cache Strategy**: Implements cache-based command execution with configurable cache directory and keys
-- **Error Handling**: Fails the action if input validation fails
+- **Cache Strategy**: Uses filesystem-based caching with configurable base directory and composite keys (prefix-key)
+- **Cache Hit**: Creates symlink from cached directory to target path when cache exists
+- **Cache Miss**: Executes command, moves result to cache directory, then creates symlink
+- **Cache Cleanup**: Automatically removes cache directories older than 7 days based on modification time
+- **Post Action**: Removes symlinks created during main action and replaces them with empty directories
+- **Build Process**: TypeScript source is compiled and bundled with @vercel/ncc for GitHub Actions distribution
 
-## Development Notes
+## Key Implementation Notes
 
-- Uses ES6 imports for @actions/core
-- Requires Node.js 20 runtime as specified in action.yml
-- Currently implements only input validation; cache logic and command execution appear incomplete in index.js
+- Uses `execSync` with `/bin/bash` shell for command execution
+- Implements atomic cache operations using move + symlink pattern
+- Creates parent directories automatically when needed
+- Handles cleanup gracefully with warning-level logging on failure
