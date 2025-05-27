@@ -49,7 +49,11 @@ async function main() {
           if (fs.existsSync(cache_dir)) {
             fs.rmSync(cache_dir, { recursive: true, force: true });
           }
-          fs.renameSync(path, cache_dir);
+          execSync(`mv "${path}" "${cache_dir}"`, {
+            stdio: 'inherit',
+            cwd: process.cwd(),
+            shell: '/bin/bash'
+          });
           
           // Create symlink from cache to target path
           fs.symlinkSync(path_module.resolve(cache_dir), path_module.resolve(path));
